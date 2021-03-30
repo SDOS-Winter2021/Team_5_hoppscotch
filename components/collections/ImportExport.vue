@@ -126,11 +126,18 @@ export default {
     SYNC_COLLECTIONS: getSettingSubject("syncCollections")
   },
   props: {
+    type: String,
     show: Boolean,
   },
   computed: {
     collectionJson() {
-      return JSON.stringify(this.$store.state.postwoman.collections, null, 2)
+      return JSON.stringify(
+        this.$props.type == "rest"
+          ? this.$store.state.postwoman.collections
+          : this.$store.state.postwoman.collectionsGraphql,
+        null,
+        2
+      )
     },
   },
   methods: {
@@ -176,7 +183,10 @@ export default {
         })
         .then(({ files }) => {
           let collections = JSON.parse(Object.values(files)[0].content)
-          this.$store.commit("postwoman/replaceCollections", { data: collections, flag: "rest" })
+          this.$store.commit("postwoman/replaceCollections", {
+            data: collections,
+            collectionType: this.$props.type,
+          })
           this.fileImported()
           this.syncToFBCollections()
         })
@@ -210,7 +220,10 @@ export default {
           this.failedImport()
           return
         }
-        this.$store.commit("postwoman/replaceCollections", { data: collections, flag: "rest" })
+        this.$store.commit("postwoman/replaceCollections", {
+          data: collections,
+          collectionType: this.$props.type,
+        })
         this.fileImported()
         this.syncToFBCollections()
       }
@@ -235,7 +248,10 @@ export default {
           this.failedImport()
           return
         }
-        this.$store.commit("postwoman/importCollections", { data: collections, flag: "rest" })
+        this.$store.commit("postwoman/importCollections", {
+          data: collections,
+          collectionType: this.$props.type,
+        })
         this.fileImported()
         this.syncToFBCollections()
       }
@@ -263,15 +279,21 @@ export default {
     syncCollections() {
       this.$store.commit("postwoman/replaceCollections", {
         data: fb.currentCollections,
-        flag: "rest",
+        collectionType: this.$props.type,
       })
       this.fileImported()
     },
     syncToFBCollections() {
       if (fb.currentUser !== null && this.SYNC_COLLECTIONS) {
         fb.writeCollections(
-          JSON.parse(JSON.stringify(this.$store.state.postwoman.collections)),
-          "collections"
+          JSON.parse(
+            JSON.stringify(
+              this.$props.type == "rest"
+                ? this.$store.state.postwoman.collections
+                : this.$store.state.postwoman.collectionsGraphql
+            )
+          ),
+          this.$props.type == "rest" ? "collections" : "collectionsGraphql"
         )
       }
     },

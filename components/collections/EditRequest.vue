@@ -42,6 +42,7 @@ import { getSettingSubject } from "~/newstore/settings"
 
 export default {
   props: {
+    type: String,
     show: Boolean,
     collectionIndex: Number,
     folderIndex: Number,
@@ -65,8 +66,14 @@ export default {
     syncCollections() {
       if (fb.currentUser !== null && this.SYNC_COLLECTIONS) {
         fb.writeCollections(
-          JSON.parse(JSON.stringify(this.$store.state.postwoman.collections)),
-          "collections"
+          JSON.parse(
+            JSON.stringify(
+              this.$props.type == "rest"
+                ? this.$store.state.postwoman.collections
+                : this.$store.state.postwoman.collectionsGraphql
+            )
+          ),
+          this.$props.type == "rest" ? "collections" : "collectionsGraphql"
         )
       }
     },
@@ -82,7 +89,7 @@ export default {
         requestFolderIndex: this.$props.folderIndex,
         requestNew: requestUpdated,
         requestIndex: this.$props.requestIndex,
-        flag: "rest",
+        collectionType: this.$props.type,
       })
 
       this.hideModal()

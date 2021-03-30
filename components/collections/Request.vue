@@ -14,7 +14,9 @@
           @click="!doc ? selectRequest() : {}"
           v-tooltip="!doc ? $t('use_request') : ''"
         >
-          <span :class="getRequestLabelColor(request.method)">{{ request.method }}</span>
+          <span v-if="type == 'rest'" :class="getRequestLabelColor(request.method)">{{
+            request.method
+          }}</span>
           <span>{{ request.name }}</span>
         </button>
       </div>
@@ -65,6 +67,7 @@ import { getSettingSubject } from "~/newstore/settings"
 
 export default {
   props: {
+    type: String,
     request: Object,
     collectionIndex: Number,
     folderIndex: Number,
@@ -94,13 +97,22 @@ export default {
     syncCollections() {
       if (fb.currentUser !== null && this.SYNC_COLLECTIONS) {
         fb.writeCollections(
-          JSON.parse(JSON.stringify(this.$store.state.postwoman.collections)),
-          "collections"
+          JSON.parse(
+            JSON.stringify(
+              this.$props.type == "rest"
+                ? this.$store.state.postwoman.collections
+                : this.$store.state.postwoman.collectionsGraphql
+            )
+          ),
+          this.$props.type == "rest" ? "collections" : "collectionsGraphql"
         )
       }
     },
     selectRequest() {
-      this.$store.commit("postwoman/selectRequest", { request: this.request })
+      this.$store.commit("postwoman/selectRequest", {
+        request: this.request,
+        collectionType: this.$props.type,
+      })
     },
     dragStart({ dataTransfer }) {
       this.dragging = !this.dragging
@@ -114,7 +126,7 @@ export default {
         collectionIndex: this.$props.collectionIndex,
         folderName: this.$props.folderName,
         requestIndex: this.$props.requestIndex,
-        flag: "rest",
+        collectionType: this.$props.type,
       })
       this.$toast.error(this.$t("deleted"), {
         icon: "delete",

@@ -43,6 +43,7 @@ import { getSettingSubject } from "~/newstore/settings"
 export default {
   props: {
     show: Boolean,
+    type: String,
   },
   data() {
     return {
@@ -58,19 +59,26 @@ export default {
     syncCollections() {
       if (fb.currentUser !== null && this.SYNC_COLLECTIONS) {
         fb.writeCollections(
-          JSON.parse(JSON.stringify(this.$store.state.postwoman.collections)),
-          "collections"
+          JSON.parse(
+            JSON.stringify(
+              this.$props.type == "rest"
+                ? this.$store.state.postwoman.collections
+                : this.$store.state.postwoman.collectionsGraphql
+            )
+          ),
+          this.$props.type == "rest" ? "collections" : "collectionsGraphql"
         )
       }
     },
     addNewCollection() {
+      console.log(this.$props.type)
       if (!this.$data.name) {
         this.$toast.info(this.$t("invalid_collection_name"))
         return
       }
       this.$store.commit("postwoman/addNewCollection", {
         name: this.$data.name,
-        flag: "rest",
+        collectionType: this.$props.type,
       })
       this.$emit("hide-modal")
       this.syncCollections()

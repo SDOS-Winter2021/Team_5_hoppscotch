@@ -59,6 +59,7 @@
           class="ml-8 border-l border-brdColor"
         >
           <CollectionsFolder
+            :type="type"
             :folder="subFolder"
             :folder-index="subFolderIndex"
             :collection-index="collectionIndex"
@@ -77,6 +78,7 @@
           class="flex ml-8 border-l border-brdColor"
         >
           <CollectionsRequest
+            :type="type"
             :request="request"
             :collection-index="collectionIndex"
             :folder-index="folderIndex"
@@ -116,6 +118,7 @@ import { getSettingSubject } from "~/newstore/settings"
 export default {
   name: "folder",
   props: {
+    type: String,
     folder: Object,
     folderIndex: Number,
     collectionIndex: Number,
@@ -139,8 +142,14 @@ export default {
     syncCollections() {
       if (fb.currentUser !== null && this.SYNC_COLLECTIONS) {
         fb.writeCollections(
-          JSON.parse(JSON.stringify(this.$store.state.postwoman.collections)),
-          "collections"
+          JSON.parse(
+            JSON.stringify(
+              this.$props.type == "rest"
+                ? this.$store.state.postwoman.collections
+                : this.$store.state.postwoman.collectionsGraphql
+            )
+          ),
+          this.$props.type == "rest" ? "collections" : "collectionsGraphql"
         )
       }
     },
@@ -152,7 +161,7 @@ export default {
         collectionIndex: this.$props.collectionIndex,
         folderName: this.$props.folder.name,
         folderIndex: this.$props.folderIndex,
-        flag: "rest",
+        collectionType: this.$props.type,
       })
       this.syncCollections()
       this.$toast.error(this.$t("deleted"), {
@@ -165,7 +174,7 @@ export default {
       const oldFolderIndex = dataTransfer.getData("oldFolderIndex")
       const oldFolderName = dataTransfer.getData("oldFolderName")
       const requestIndex = dataTransfer.getData("requestIndex")
-      const flag = "rest"
+      const collectionType = this.$props.type
 
       this.$store.commit("postwoman/moveRequest", {
         oldCollectionIndex,
@@ -175,7 +184,7 @@ export default {
         oldFolderIndex,
         oldFolderName,
         requestIndex,
-        flag,
+        collectionType,
       })
       this.syncCollections()
     },

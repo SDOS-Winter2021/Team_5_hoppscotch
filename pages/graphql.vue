@@ -582,11 +582,23 @@ export default {
     next()
   },
   methods: {
+    checkCollections() {
+      const checkCollectionAvailability =
+        this.$store.state.postwoman.collectionsGraphql &&
+        this.$store.state.postwoman.collectionsGraphql.length > 0
+      return checkCollectionAvailability
+    },
     hideRequestModal() {
       this.showSaveRequestModal = false
       this.editRequest = {}
     },
     saveRequest() {
+      if (!this.checkCollections()) {
+        this.$toast.error(this.$t("create_collection"), {
+          icon: "error",
+        })
+        return
+      }
       this.editRequest = {
         url: this.url,
         query: this.gqlQueryString,
